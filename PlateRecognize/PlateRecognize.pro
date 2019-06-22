@@ -25,6 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        charsegment_v3.cpp \
         main.cpp \
         platecategory_svm.cpp \
         platechar_svm.cpp \
@@ -33,6 +34,7 @@ SOURCES += \
         platerecognize.cpp
 
 HEADERS += \
+        charsegment_v3.h \
         platecategory.h \
         platecategory_svm.h \
         platechar_svm.h \
@@ -46,7 +48,6 @@ FORMS += \
 INCLUDEPATH += E:\Software\OpenCv\opencv\build\include
 
 LIBS += -LE:\Software\OpenCv\opencv\build\x64\vc15\lib\
-        -lopencv_world410d \
         -lopencv_world410 \
 
 # Default rules for deployment.
