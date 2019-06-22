@@ -23,7 +23,7 @@ void PlateCategory_SVM::SavePlateSample(cv::Mat matPlate, PlateCategory plateCat
 {
     QTime now = QTime::currentTime();
     QString name = now.toString() + QString::number(random(100000));
-    QString fileName = libPath + "\\plate\\" + plateCategory + "\\" + name + ".jpg";
+    QString fileName = libPath + "\\plate\\" + PlateCategoryString[plateCategory] + "\\" + name + ".jpg";
 
     std::string str = fileName.toLocal8Bit().toStdString();
     cv::imwrite(str, matPlate);
@@ -86,7 +86,7 @@ bool PlateCategory_SVM::isCorrectTrainningDirectory(QString path)
 {
     bool isCorrect = true;
 
-    for(int index = 0; index < PlateCategoryString->length(); index++)
+    for(int index = 0; index < PlateCategoryString.size(); index++)
     {
         QString plateCategoryName = PlateCategoryString[index];
 
@@ -149,8 +149,7 @@ bool PlateCategory_SVM::PreparePlateTrainningDirectory(QString path)
         {
             dir.mkpath(platesDiretory);
         }
-
-        for(int index_plateCategory = 0; index_plateCategory < PlateCategoryString->length(); index_plateCategory++)
+        for(int index_plateCategory = 0; index_plateCategory < PlateCategoryString.size(); index_plateCategory++)
         {
             QString plateCategoryDirectory = platesDiretory + "\\" + PlateCategoryString[index_plateCategory];
             if(dir.exists(plateCategoryDirectory) == false)

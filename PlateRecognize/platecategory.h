@@ -25,12 +25,12 @@ enum PlateCategory
     新能源 = 13
 };
 
-const QString PlateCategoryString[] =
+const QList<QString> PlateCategoryString =
 {
     "非车牌",
     "普通车牌",
     "普通车牌_两行",
-    "内集车牌",
+    "內集车牌",
     "澳门车牌_内",
     "澳门车牌",
     "澳门车牌_两行",
@@ -53,7 +53,7 @@ enum PlateColor
     未知 = 6
 };
 
-const QString PlateColorString[] =
+const QList<QString> PlateColorString =
 {
     "蓝牌",
     "黄牌",
@@ -140,7 +140,7 @@ enum PlateChar
     警 = 72
 };
 
-const QString PlateCharString[]
+const QList<QString> PlateCharString
 {
     "非字符",
     "穗",
@@ -227,7 +227,7 @@ enum PlateLocateMethod
     MSER法 = 5
 };
 
-const QString PlateLocateMethodStringp[] =
+const QList<QString> PlateLocateMethodStringp =
 {
     "未知方法",
     "颜色法_蓝黑",
@@ -246,7 +246,7 @@ enum CharSplitMethod
     对数 = 4
 };
 
-const QString CharSplitMethodString[] =
+const QList<QString> CharSplitMethodString =
 {
     "未知字符方法",
     "原图",
