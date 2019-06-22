@@ -48,7 +48,7 @@ FORMS += \
 INCLUDEPATH += E:\Software\OpenCv\opencv\build\include
 
 LIBS += -LE:\Software\OpenCv\opencv\build\x64\vc15\lib\
-        -lopencv_world410 \
+        -lopencv_world410d \
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

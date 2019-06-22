@@ -55,7 +55,7 @@ private:
     {
     public:
         int Compare(cv::Rect x,cv::Rect y);
-    }
+    };
     class RectBottomComparer
     {
     public:
