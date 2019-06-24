@@ -22,7 +22,8 @@ enum PlateCategory
     警牌 = 10,
     军牌 = 11,
     军牌_两行 = 12,
-    新能源 = 13
+    新能源 = 13,
+    未识别 = 14
 };
 
 const QString PlateCategoryString[] =
@@ -40,7 +41,8 @@ const QString PlateCategoryString[] =
     "警牌",
     "军牌",
     "军牌_两行",
-    "新能源"
+    "新能源",
+    "未识别"
 };
 
 enum PlateColor
