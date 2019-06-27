@@ -20,6 +20,8 @@ public:
 
     void testIt();
 
+    void locatortest();
+
     ~PlateRecognize();
 
 private:

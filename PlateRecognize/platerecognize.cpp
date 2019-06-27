@@ -2,6 +2,7 @@
 #include "ui_platerecognize.h"
 
 #include "platecategory_svm.h"
+#include "platelocator_v3.h"
 #include <QDir>
 
 #include <iostream>
@@ -11,9 +12,11 @@ PlateRecognize::PlateRecognize(QWidget *parent) :
     ui(new Ui::PlateRecognize)
 {
     ui->setupUi(this);
-    learnIt();
+    //learnIt();
 
-    testIt();
+    //testIt();
+
+    locatortest();
 }
 
 PlateRecognize::~PlateRecognize()
@@ -153,4 +156,21 @@ void PlateRecognize::testIt()
     }
     std::cout<<std::endl<<"total: "<<sum<<" error: "<<error<<" accuracy: "<<(float)(1 - (float)error/sum)<<std::endl;
 
+}
+
+void PlateRecognize::locatortest()
+{
+    PlateCategory_SVM::Load("./WhatILearned.xml");
+    QString imgname = QString("E:/学习/专业实训3/车牌识别的素材/B9V636_2019-03-15-08-38-00-025052.jpg");
+    std::string imgstr = imgname.toLocal8Bit().toStdString();
+    cv::Mat matSource = cv::imread(imgstr);
+    cv::Mat matProcess;
+    QList<PlateInfo> plateinfos = PlateLocator_V3::LocatePlatesForAutoSample(matSource,matProcess);
+    for (int i = 0;i < plateinfos.size();i++) {
+        cv::Mat roi = plateinfos[i].originalMat;
+        QString filename = QString("E:/学习/专业实训3/output/") + PlateCategoryString[plateinfos[i].plateCategory] + QString(".jpg");
+        std::string str = filename.toLocal8Bit().toStdString();
+        cv::imwrite(str,roi);
+
+    }
 }

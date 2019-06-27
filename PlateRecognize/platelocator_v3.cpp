@@ -16,7 +16,7 @@ bool PlateLocator_V3::VerifyPlateSize(cv::Size size, int minWidth, int maxWidth,
     return result;
 }
 
-QList<PlateInfo> PlateLocator_V3::LocatePlatesForCameraAdjust(cv::Mat matSource, cv::Mat matProcess, int blur_Size, int sobel_Scale, int sobel_Delta, int sobel_X_Weight, int sobel_Y_Weight, int morph_Size_Width, int morph_Size_Height, int minWidth, int maxWidth, int minHeight, int maxHeight, float minRatio, float maxRatio)
+QList<PlateInfo> PlateLocator_V3::LocatePlatesForCameraAdjust(cv::Mat matSource, cv::Mat *matProcess, int blur_Size, int sobel_Scale, int sobel_Delta, int sobel_X_Weight, int sobel_Y_Weight, int morph_Size_Width, int morph_Size_Height, int minWidth, int maxWidth, int minHeight, int maxHeight, float minRatio, float maxRatio)
 {
     QList<PlateInfo> plateInfos = LocatePlatesForAutoSample(matSource,matProcess,blur_Size,sobel_Scale,sobel_Delta,sobel_X_Weight,sobel_Y_Weight,morph_Size_Width,morph_Size_Height,minWidth,maxWidth,minHeight,maxHeight,minRatio,maxRatio);
     for (int i = plateInfos.count()-1;i>=0;i--) {
@@ -26,14 +26,14 @@ QList<PlateInfo> PlateLocator_V3::LocatePlatesForCameraAdjust(cv::Mat matSource,
     return plateInfos;
 }
 
-QList<PlateInfo> PlateLocator_V3::LocatePlatesForAutoSample(cv::Mat matSource, cv::Mat matProcess, int blur_Size, int sobel_Scale, int sobel_Delta, int sobel_X_Weight, int sobel_Y_Weight, int morph_Size_Width, int morph_Size_Height, int minWidth, int maxWidth, int minHeight, int maxHeight, float minRatio, float maxRatio)
+QList<PlateInfo> PlateLocator_V3::LocatePlatesForAutoSample(cv::Mat matSource, cv::Mat *matProcess, int blur_Size, int sobel_Scale, int sobel_Delta, int sobel_X_Weight, int sobel_Y_Weight, int morph_Size_Width, int morph_Size_Height, int minWidth, int maxWidth, int minHeight, int maxHeight, float minRatio, float maxRatio)
 {
     QList<PlateInfo> plateInfos = QList<PlateInfo>();
     cv::Mat gray;
     cv::Mat blur;
     if (matSource.empty()||(matSource.rows == 0)||(matSource.cols == 0))
     {
-        matProcess = cv::Mat(0,0,CV_8UC1);
+        *matProcess = cv::Mat(0,0,CV_8UC1);
         return plateInfos;
     }
     cv::cvtColor(matSource,gray,cv::COLOR_BGR2GRAY);
@@ -102,7 +102,7 @@ QList<PlateInfo> PlateLocator_V3::LocatePlatesForAutoSample(cv::Mat matSource, c
     cv::morphologyEx(threshold,threshold_Close,cv::MorphTypes::MORPH_CLOSE,element);
     element_Erode = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(5,5));
     cv::erode(threshold_Close,threshold_Erode,element_Erode);
-    matProcess = threshold_Erode;
+    *matProcess = threshold_Erode.clone();
     contours.clear();
     hierarchys.clear();
     cv::findContours(threshold_Erode,contours,hierarchys,cv::RetrievalModes::RETR_EXTERNAL,cv::ContourApproximationModes::CHAIN_APPROX_NONE);
@@ -125,14 +125,14 @@ QList<PlateInfo> PlateLocator_V3::LocatePlatesForAutoSample(cv::Mat matSource, c
     return plateInfos;
 }
 
-QList<PlateInfo> PlateLocator_V3::LocatePlatesForAutoSampleWithoutSVM(cv::Mat matSource, cv::Mat matProcess, int blur_Size, int sobel_Scale, int sobel_Delta, int sobel_X_Weight, int sobel_Y_Weight, int morph_Size_Width, int morph_Size_Height, int minWidth, int maxWidth, int minHeight, int maxHeight, float minRatio, float maxRatio)
+QList<PlateInfo> PlateLocator_V3::LocatePlatesForAutoSampleWithoutSVM(cv::Mat matSource, cv::Mat *matProcess, int blur_Size, int sobel_Scale, int sobel_Delta, int sobel_X_Weight, int sobel_Y_Weight, int morph_Size_Width, int morph_Size_Height, int minWidth, int maxWidth, int minHeight, int maxHeight, float minRatio, float maxRatio, int bluelow_H, int bluelow_S, int bluelow_V, int blueup_H, int blueup_S, int blueup_V, int yellowlow_H, int yellowlow_S, int yellowlow_V, int yellowup_H, int yellowup_S, int yellowup_V)
 {
     QList<PlateInfo> plateInfos = QList<PlateInfo>();
     cv::Mat gray;
     cv::Mat blur;
     if (matSource.empty()||(matSource.rows == 0)||(matSource.cols == 0))
     {
-        matProcess = cv::Mat(0,0,CV_8UC1);
+        *matProcess = cv::Mat(0,0,CV_8UC1);
         return plateInfos;
     }
     cv::cvtColor(matSource,gray,cv::COLOR_BGR2GRAY);
@@ -144,12 +144,12 @@ QList<PlateInfo> PlateLocator_V3::LocatePlatesForAutoSampleWithoutSVM(cv::Mat ma
     cv::equalizeHist(hsvSplits[2],hsvSplits[2]);
     cv::Mat hsvEqualizeHist = cv::Mat();
     cv::merge(hsvSplits,3,hsvEqualizeHist);
-    cv::Scalar blueStart = cv::Scalar(100,70,70);
-    cv::Scalar blueEnd = cv::Scalar(140,255,255);
+    cv::Scalar blueStart = cv::Scalar(bluelow_H,bluelow_S,bluelow_V);
+    cv::Scalar blueEnd = cv::Scalar(blueup_H,blueup_S,blueup_V);
     cv::Mat blue;
     cv::inRange(hsvEqualizeHist,blueStart,blueEnd,blue);
-    cv::Scalar yellowStart = cv::Scalar(15,70,70);
-    cv::Scalar yellowEnd = cv::Scalar(40,255,255);
+    cv::Scalar yellowStart = cv::Scalar(yellowlow_H,yellowlow_S,yellowlow_V);
+    cv::Scalar yellowEnd = cv::Scalar(yellowup_H,yellowup_S,yellowup_V);
     cv::Mat yellow;
     cv::inRange(hsvEqualizeHist,yellowStart,yellowEnd,yellow);
     cv::Mat add = blue + yellow;
@@ -196,7 +196,7 @@ QList<PlateInfo> PlateLocator_V3::LocatePlatesForAutoSampleWithoutSVM(cv::Mat ma
     cv::morphologyEx(threshold,threshold_Close,cv::MorphTypes::MORPH_CLOSE,element);
     element_Erode = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(5,5));
     cv::erode(threshold_Close,threshold_Erode,element_Erode);
-    matProcess = threshold_Erode;
+    *matProcess = threshold_Erode.clone();
     contours.clear();
     hierarchys.clear();
     cv::findContours(threshold_Erode,contours,hierarchys,cv::RetrievalModes::RETR_EXTERNAL,cv::ContourApproximationModes::CHAIN_APPROX_NONE);
