@@ -1,9 +1,12 @@
-﻿#ifndef PLATERECOGNITION_V3_H
+#ifndef PLATERECOGNITION_V3_H
 #define PLATERECOGNITION_V3_H
 
 #include <opencv2/ml/ml.hpp>
 
 #include "platecategory.h"
+#include "platelocator_v3.h"
+#include "platechar_svm.h"
+#include "charsegment_v3.h"
 
 class PlateRecognition_V3
 {
@@ -12,18 +15,20 @@ private:
 
     static void CheckPlateColor(PlateInfo plateInfo);
 
+
 public:
     PlateRecognition_V3();
 
-    static QList<PlateInfo> Recognite(cv::Mat matSource);
+    static QList<PlateInfo> Recognize(cv::Mat matSource);
 
-    static PlateInfo GetPlateInfoByMutilMethodAndMutilColor(PlateInfo plateInfo);
+    static PlateInfo GetPlateInfoByMultiMethodAndMultiColor(PlateInfo plateInfo);
 
     static bool JudgePlateRightful(PlateInfo plateInfo);
 
-    static PlateInfo GetPlateInfoByMutilMethod(PlateInfo plateInfo, PlateColor plateColor);
+    static PlateInfo GetPlateInfoByMultiMethod(PlateInfo plateInfo, PlateColor plateColor);
 
     static PlateInfo GetPlateInfo(PlateInfo plateInfo, PlateColor plateColor, CharSplitMethod splitMethod);
+
 
 
 };
