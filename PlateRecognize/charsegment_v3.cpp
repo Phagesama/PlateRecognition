@@ -1,4 +1,4 @@
-﻿#include "charsegment_v3.h"
+#include "charsegment_v3.h"
 
 CharSegment_V3::CharSegment_V3()
 {
@@ -9,34 +9,88 @@ CharSegment_V3::CharSegment_V3()
 cv::Mat CharSegment_V3::ClearMaoding(cv::Mat threshold)
 {
     // QList<float> *jumps = new QList<float>();
-    cv::Mat *jump = new cv::Mat(threshold.rows,1,CV_32F);
-    for (int rowIndex = 0;rowIndex<threshold.cols-1;rowIndex++)
+    cv::Mat result = threshold.clone();
+    cv::Mat jump(result.rows,1,CV_32FC1);
+    for (int rowIndex = 0;rowIndex<result.rows-1;rowIndex++)
     {
         int jumpCount = 0;
-        for (int colIndex = 0;colIndex <threshold.cols-1;colIndex++)
+        for (int colIndex = 0;colIndex <result.cols-1;colIndex++)
         {
-            if(threshold.at<unsigned char>(rowIndex,colIndex)!=
-                    threshold.at<unsigned char>(rowIndex,colIndex+1)) jumpCount++;
+            if(result.at<unsigned char>(rowIndex,colIndex)!=
+                    result.at<unsigned char>(rowIndex,colIndex+1)) jumpCount++;
 
         }
         // 记录每一行的数值波动数
-        jump->at<float>(rowIndex,0) = (float) jumpCount;
+        jump.at<int>(rowIndex,0) = jumpCount;
     }
-    int x = 7;
-    cv::Mat result = threshold.clone();
+    int x = 8;
     // 对于每一行的波动数小于7次的行置为0
-    for (int rowIndex = 0;rowIndex < threshold.rows ; rowIndex++)
+    for (int rowIndex = 0;rowIndex < result.rows ; rowIndex++)
     {
-        if (jump->at<float>(rowIndex)<=x)
+        if (jump.at<int>(rowIndex)<=x)
         {
-            for (int colIndex = 0;colIndex<threshold.cols;colIndex++)
+            for (int colIndex = 0;colIndex<result.cols;colIndex++)
             {
                 result.at<unsigned char>(rowIndex,colIndex) = 0;
             }
         }
     }
+
+    jump.release();
     return result;
+
+
 }
+
+//void clearMaoDing(Mat mask, int &top, int &bottom) {
+//    const int x = 7;
+
+//    for (int i = 0; i < mask.rows / 2; i++) {
+//      int whiteCount = 0;
+//      int jumpCount = 0;
+//      for (int j = 0; j < mask.cols - 1; j++) {
+//        if (mask.at<char>(i, j) != mask.at<char>(i, j + 1)) jumpCount++;
+
+//        if ((int) mask.at<uchar>(i, j) == 255) {
+//          whiteCount++;
+//        }
+//      }
+//      if ((jumpCount < x && whiteCount * 1.0 / mask.cols > 0.15) ||
+//          whiteCount < 4) {
+//        top = i;
+//      }
+//    }
+//    top -= 1;
+//    if (top < 0) {
+//      top = 0;
+//    }
+
+//    // ok, find top and bottom boudnadry
+
+//    for (int i = mask.rows - 1; i >= mask.rows / 2; i--) {
+//      int jumpCount = 0;
+//      int whiteCount = 0;
+//      for (int j = 0; j < mask.cols - 1; j++) {
+//        if (mask.at<char>(i, j) != mask.at<char>(i, j + 1)) jumpCount++;
+//        if (mask.at<uchar>(i, j) == 255) {
+//          whiteCount++;
+//        }
+//      }
+//      if ((jumpCount < x && whiteCount * 1.0 / mask.cols > 0.15) ||
+//          whiteCount < 4) {
+//        bottom = i;
+//      }
+//    }
+//    bottom += 1;
+//    if (bottom >= mask.rows) {
+//      bottom = mask.rows - 1;
+//    }
+
+//    if (top >= bottom) {
+//      top = 0;
+//      bottom = mask.rows - 1;
+//    }
+//  }
 
 // 函数2，抹去边界处的轮廓
 cv::Mat CharSegment_V3::ClearBorder(cv::Mat threshold)
@@ -46,7 +100,7 @@ cv::Mat CharSegment_V3::ClearBorder(cv::Mat threshold)
     // 认定超过此值时为边界
     int noJumpCountThresh = (int)(0.15f*cols);
     // 记录每一行是否为边界
-    cv::Mat *border = new cv::Mat(rows,1,CV_8UC1);
+    cv::Mat border(rows,1,CV_8UC1);
     // 每一行有15%的值与前一个点相同时认定为边界
     for (int rowIndex = 0;rowIndex<rows;rowIndex++) {
         int noJumpCount = 0;
@@ -63,7 +117,7 @@ cv::Mat CharSegment_V3::ClearBorder(cv::Mat threshold)
                 break;
             }
         }
-        border->at<unsigned char>(rowIndex,0,isBorder);
+        border.at<unsigned char>(rowIndex,0,isBorder);
     }
 
     int minTop = (int)(0.1f*rows);
@@ -72,7 +126,7 @@ cv::Mat CharSegment_V3::ClearBorder(cv::Mat threshold)
     // 对于0~0.1高度范围内每一行中是边界的行置为0
     for (int rowIndex = 0;rowIndex < minTop ; rowIndex++)
     {
-        if (border->at<unsigned char>(rowIndex,0) == 1)
+        if (border.at<unsigned char>(rowIndex,0) == 1)
         {
             for (int colIndex = 0;colIndex<cols;colIndex++)
             {
@@ -83,7 +137,7 @@ cv::Mat CharSegment_V3::ClearBorder(cv::Mat threshold)
     // 对于0.9~1高度范围内每一行中是边界的行置为0
     for (int rowIndex = rows -1;rowIndex > maxTop ; rowIndex--)
     {
-        if (border->at<unsigned char>(rowIndex,0) == 1)
+        if (border.at<unsigned char>(rowIndex,0) == 1)
         {
             for (int colIndex = 0;colIndex<cols;colIndex++)
             {
@@ -98,12 +152,14 @@ cv::Mat CharSegment_V3::ClearBorder(cv::Mat threshold)
 cv::Mat CharSegment_V3::ClearMaodingAndBorder(cv::Mat gray, PlateColor plateColor)
 {
     cv::Mat threshold;
+    gray.type();
     switch(plateColor)
     {
     case PlateColor::蓝牌:
     case PlateColor::黑牌:
         // 源：threshold = gray.Threashold(1,255,ThresholdTypes.THRESH_OTSU | ThresholdTypes.THRESH_BINARY);
-        cv::threshold(gray,threshold,0,255,cv::ThresholdTypes::THRESH_OTSU | cv::ThresholdTypes::THRESH_BINARY);;
+        cv::threshold(gray,threshold,0,255,cv::ThresholdTypes::THRESH_OTSU | cv::ThresholdTypes::THRESH_BINARY);
+
         break;
     case PlateColor::黄牌:
     case PlateColor::白牌:
@@ -128,7 +184,7 @@ QList<CharInfo> CharSegment_V3::SplitCharsInPlateMat(cv::Mat plateMat, QList<cv:
         //throw  new QException ("字符识别库没有准备好") ;
         qDebug() << "字符识别库没有准备好";
     }
-    QList<CharInfo> *result = new QList<CharInfo>();
+    QList<CharInfo> result;
     for (int index = 0; index < rects.count(); index++) {
         cv::Rect rect = rects[index];
         // 保证矩形在图形内
@@ -140,11 +196,11 @@ QList<CharInfo> CharSegment_V3::SplitCharsInPlateMat(cv::Mat plateMat, QList<cv:
         charInfo.originalRect = rect;
         // 识别
         charInfo.plateChar = PlateChar_SVM::Test(originalMat);
-        result->append(charInfo);
+        result.append(charInfo);
     }
-    qSort(result->begin(),result->end(),CharInfoLeftCompare);
+    qSort(result.begin(),result.end(),CharInfoLeftCompare);
 
-    return *result;
+    return result;
 
 }
 // 函数5，调用函数6，7，8，9， 主函数，调用这个函数可以将车牌图片传入，将切好并识别的字符信息类传出
@@ -154,47 +210,49 @@ QList<CharInfo> CharSegment_V3::SplitPlateForAutoSample(cv::Mat plateMat)
     // 四种方法识别蓝色图像
     QList<CharInfo> charInfos_Original_Blue = SplitPlateByOriginal(plateMat,plateMat, PlateColor::蓝牌);
     QList<CharInfo> charInfos_IndexTransform_Blue = SplitPlateByIndexTransform(plateMat,PlateColor::蓝牌);
-    QList<CharInfo> charInfos_GammaTransform_Blue = SplitPlateByGammaTransform(plateMat,PlateColor::蓝牌);
+     QList<CharInfo> charInfos_GammaTransform_Blue = SplitPlateByGammaTransform(plateMat,PlateColor::蓝牌);
     QList<CharInfo> charInfos_LogTransform_Blue = SplitPlateByLogTransform(plateMat, PlateColor::蓝牌);
     //
-    QList<CharInfo> *charInfos_Blue = new QList<CharInfo>();
+    QList<CharInfo> charInfos_Blue;
     // charInfos_Blue.AddRange(charInfos_Original_Blue.ToArray());
-    foreach (CharInfo ci, charInfos_Original_Blue) charInfos_Blue->append(ci);
-    foreach (CharInfo ci, charInfos_IndexTransform_Blue) charInfos_Blue->append(ci);
-    foreach (CharInfo ci, charInfos_GammaTransform_Blue) charInfos_Blue->append(ci);
-    foreach (CharInfo ci, charInfos_LogTransform_Blue) charInfos_Blue->append(ci);
+    foreach (CharInfo ci, charInfos_Original_Blue) charInfos_Blue.append(ci);
+    foreach (CharInfo ci, charInfos_IndexTransform_Blue) charInfos_Blue.append(ci);
+    foreach (CharInfo ci, charInfos_GammaTransform_Blue) charInfos_Blue.append(ci);
+    foreach (CharInfo ci, charInfos_LogTransform_Blue) charInfos_Blue.append(ci);
+    return charInfos_Blue;
     // 用SVM识别图片中字符的个数
     int isCharCount = 0;
-    for (int index = 0; index < charInfos_Blue->count(); index++)
-    {
-        CharInfo charInfo = charInfos_Blue->at(index);
-        // 将切出的字符进行识别
-        charInfo.plateChar = PlateChar_SVM::Test(charInfo.originalMat);
-        if (charInfo.plateChar != PlateChar::非字符) isCharCount++;
-    }
+//    for (int index = 0; index < charInfos_Blue->count(); index++)
+//    {
+//        CharInfo charInfo = charInfos_Blue->at(index);
+//        // 将切出的字符进行识别
+//        charInfo.plateChar = PlateChar_SVM::Test(charInfo.originalMat);
+//        if (charInfo.plateChar != PlateChar::非字符) isCharCount++;
+//    }
     // 如果用蓝色切分字符，少于15个，就再用⻩色尝试切分
-    if (isCharCount >= 15) return *charInfos_Blue;// 差不多当蓝色识别出来了
+    if (isCharCount >= 15) return charInfos_Blue;// 差不多当蓝色识别出来了
     QList<CharInfo> charInfos_Original_Yellow = SplitPlateByOriginal(plateMat,plateMat, PlateColor::黄牌);
     QList<CharInfo> charInfos_IndexTransform_Yellow = SplitPlateByIndexTransform(plateMat,PlateColor::黄牌);
     QList<CharInfo> charInfos_GammaTransform_Yellow = SplitPlateByGammaTransform(plateMat,PlateColor::黄牌);
     QList<CharInfo> charInfos_LogTransform_Yellow = SplitPlateByLogTransform(plateMat, PlateColor::黄牌);
-    QList<CharInfo> *charInfos_Yellow = new QList<CharInfo>();
+    QList<CharInfo> charInfos_Yellow;
     // charInfos_Blue.AddRange(charInfos_Original_Blue.ToArray());
-    foreach (CharInfo ci, charInfos_Original_Yellow) charInfos_Yellow->append(ci);
-    foreach (CharInfo ci, charInfos_IndexTransform_Yellow) charInfos_Yellow->append(ci);
-    foreach (CharInfo ci, charInfos_GammaTransform_Yellow) charInfos_Yellow->append(ci);
-    foreach (CharInfo ci, charInfos_LogTransform_Yellow) charInfos_Yellow->append(ci);
+    foreach (CharInfo ci, charInfos_Original_Yellow) charInfos_Yellow.append(ci);
+    foreach (CharInfo ci, charInfos_IndexTransform_Yellow) charInfos_Yellow.append(ci);
+    foreach (CharInfo ci, charInfos_GammaTransform_Yellow) charInfos_Yellow.append(ci);
+    foreach (CharInfo ci, charInfos_LogTransform_Yellow) charInfos_Yellow.append(ci);
     // 用SVM识别图片中字符的个数
     isCharCount = 0;
-    for (int index = 0; index < charInfos_Yellow->count(); index++)
+    for (int index = 0; index < charInfos_Yellow.count(); index++)
     {
-        CharInfo charInfo = charInfos_Yellow->at(index);
+        CharInfo charInfo = charInfos_Yellow.at(index);
         charInfo.plateChar = PlateChar_SVM::Test(charInfo.originalMat);
         if (charInfo.plateChar != PlateChar::非字符) isCharCount++;
     }
-    if (isCharCount >= 15) return *charInfos_Yellow;// 差不多当黄色识别出来了
+    if (isCharCount >= 15) return charInfos_Yellow;// 差不多当黄色识别出来了
     QList<CharInfo> *empty = new QList<CharInfo>();
-    return *empty; //返回长度为零的集合，未识别
+    return *empty;
+    //返回长度为零的集合，未识别
 }
 
 // 函数6，调用函数9、23，用指数变换结果分割字符
@@ -224,51 +282,67 @@ QList<CharInfo> CharSegment_V3::SplitPlateByGammaTransform(cv::Mat originalMat, 
 // 函数9，用原图形分割字符
 QList<CharInfo> CharSegment_V3::SplitPlateByOriginal(cv::Mat originalMat, cv::Mat plateMat, PlateColor plateColor, CharSplitMethod charSplitMethod, int leftLimit, int rightLimit, int topLimit, int bottomLimit, int minWidth, int maxWidth, int minHeight, int maxHeight, float minRatio, float maxRatio)
 {
-    QList<CharInfo> *result = new QList<CharInfo>();
+    QList<CharInfo> result;
     cv::Mat gray;
     // 转为灰色图像
-    plateMat.convertTo(gray,cv::COLOR_BGR2GRAY);
+
+    cv::cvtColor(plateMat,gray,cv::COLOR_BGR2GRAY);
+
             //cvtColor(ColorConversionCodes.BGR2GRAY);
     // 去除杂质
     cv::Mat matOfClearMaodingAndBorder = ClearMaodingAndBorder(gray, plateColor);
+    // 尝试开操作
+//    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(3,3));
+//    cv::dilate(matOfClearMaodingAndBorder,matOfClearMaodingAndBorder,element);
+//    cv::erode(matOfClearMaodingAndBorder,matOfClearMaodingAndBorder,element);
+
+
     // 寻找门槛图像(为1的部分)的连通区域
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchyIndices;
-    cv::findContours(gray,contours,
+    cv::findContours(matOfClearMaodingAndBorder,contours,
                      hierarchyIndices,
                      cv::RETR_TREE,
                      cv::CHAIN_APPROX_SIMPLE);
+
     // 将抓取的字符矩形放入数组
-    QList<cv::Rect> *rects = new QList<cv::Rect>();
+    QList<cv::Rect> rects;
+    qDebug()<< "切出的矩形数："<< contours.size();
     for (int index = 0; index < contours.size(); index++)
     {
         // 计算包含轮廓的最小矩形
         cv::Rect rect = cv::boundingRect(contours.at(index));
+        qDebug()<< "连通区域的矩形坐标：（"<<rect.x<<","<<rect.y<<"),宽和长：："<<rect.width<<rect.height;
         // 不在边界且符合参数要求规范
-        if (NotOnBorder(rect,plateMat.size(),leftLimit, rightLimit, topLimit, bottomLimit)
-                && VerifyRect(rect, minWidth, maxWidth, minHeight, maxHeight, minRatio, maxRatio))
-            rects->append(rect);
+         if (NotOnBorder(rect,plateMat.size(),leftLimit, rightLimit, topLimit, bottomLimit)
+                 && VerifyRect(rect, minWidth, maxWidth, minHeight, maxHeight, minRatio, maxRatio))
+            rects.append(rect);
     }
+    qDebug()<<"矩形剩余个数："<< rects.count();
     // 删除矩形中的小矩形
-    *rects = RejectInnerRectFromRects(*rects);
+    rects = RejectInnerRectFromRects(rects);
     // 调整大小
-    *rects = AdjustRects(*rects);
+    rects = AdjustRects(rects);
     // 没找到 返回空
-    if (rects->count() == 0) return *result;
+    qDebug()<<"矩形剩余个数："<< rects.count();
+    if (rects.count() == 0) return result;
     // 将矩阵信息加入字符信息类CharInfo中
-    for (int index = 0; index < rects->count(); index++) {
-        CharInfo *plateCharInfo = new CharInfo();
-        rects->replace(index,GetSafeRect(rects->at(index), originalMat));
-        cv::Rect rectROI = rects->at(index);
+    for (int index = 0; index < rects.count(); index++) {
+        CharInfo plateCharInfo;
+        rects.replace(index,GetSafeRect(rects.at(index), originalMat));
+        cv::Rect rectROI = rects.at(index);
         cv::Mat matROI = originalMat(rectROI);
-        plateCharInfo->originalMat = matROI;
-        plateCharInfo->originalRect = rectROI;
-        plateCharInfo->charSplitMethod = charSplitMethod;
-        result->append(*plateCharInfo);
+        plateCharInfo.originalMat = matROI;
+        plateCharInfo.originalRect = rectROI;
+        plateCharInfo.charSplitMethod = charSplitMethod;
+        plateCharInfo.plateChar = PlateChar::未识别字符;
+        plateCharInfo.plateLocateMethod = PlateLocateMethod::颜色法;
+
+        result.append(plateCharInfo);
     }
     // 从左到右排序
-    qSort(result->begin(),result->end(),CharInfoLeftCompare);
-    return *result;
+    qSort(result.begin(),result.end(),CharInfoLeftCompare);
+    return result;
 }
 
 // 函数10，保证矩形符合参数要求的规范
@@ -314,17 +388,17 @@ void CharSegment_V3::SortRectsByHeight_ASC(QList<cv::Rect> rects)
 // 函数14，合并两个矩形
 cv::Rect CharSegment_V3::MergeRect(cv::Rect A, cv::Rect B)
 {
-    cv::Rect *result = new cv::Rect();
+    cv::Rect result;
     int minX = (A.x<=B.x)? A.x:B.x;
     int minY = (A.y<=B.y)? A.y:B.y;
     int maxX = (A.width+A.x >= B.width+B.x)? A.width+A.x:B.width+B.x;
     int maxY = (A.height+A.y >= B.height+B.y)? A.height+A.y:B.height+B.y;
-    result->x = minX;
-    result->y = minY;
-    result->width = maxX-minX;
-    result->height = maxY-minY;
+    result.x = minX;
+    result.y = minY;
+    result.width = maxX-minX;
+    result.height = maxY-minY;
 
-    return *result;
+    return result;
 }
 // 函数15，调整字符大小使得所有矩形的大小相似，并包含字符
 QList<cv::Rect> CharSegment_V3::AdjustRects(QList<cv::Rect> rects)
@@ -557,10 +631,10 @@ cv::Mat CharSegment_V3::GammaTransform(cv::Mat originalMap)
             for (int colIndex = 0; colIndex < result.cols; colIndex++)
             {
                 cv::Vec3b temp = result.at<cv::Vec3b>(rowIndex, colIndex);
-                cv::Vec3b *gamma = new cv::Vec3b((unsigned char)lut[temp[0]],
+                cv::Vec3b gamma((unsigned char)lut[temp[0]],
                         (unsigned char)lut[temp[1]],
                         (unsigned char)lut[temp[2]]);
-                result.at<cv::Vec3b>(rowIndex, colIndex) =  *gamma;
+                result.at<cv::Vec3b>(rowIndex, colIndex) =  gamma;
             }
         }
     }
