@@ -1,4 +1,4 @@
-#include "charsegment_v3.h"
+﻿#include "charsegment_v3.h"
 
 CharSegment_V3::CharSegment_V3()
 {
@@ -274,7 +274,7 @@ QList<CharInfo> CharSegment_V3::SplitPlateByLogTransform(cv::Mat originalMat, Pl
 // 函数8，调用函数9、25，用伽马变换结果分割字符
 QList<CharInfo> CharSegment_V3::SplitPlateByGammaTransform(cv::Mat originalMat, PlateColor plateColor, float gammaFactor, int leftLimit, int rightLimit, int topLimit, int bottomLimit, int minWidth, int maxWidth, int minHeight, int maxHeight, float minRatio, float maxRatio)
 {
-    cv::Mat plateMat = GammaTransform(originalMat);
+    cv::Mat plateMat = GammaTransform(originalMat, gammaFactor);
     return SplitPlateByOriginal(originalMat,plateMat, plateColor, CharSplitMethod::伽马,
     leftLimit, rightLimit, topLimit, bottomLimit, minWidth, maxWidth, minHeight, maxHeight, minRatio, maxRatio);
 }
@@ -600,10 +600,9 @@ cv::Mat CharSegment_V3::LogTransform(cv::Mat originalMap)
 }
 
 // 函数25 图像伽马变换
-cv::Mat CharSegment_V3::GammaTransform(cv::Mat originalMap)
+cv::Mat CharSegment_V3::GammaTransform(cv::Mat originalMap, float gammaFactor)
 {
     int lut[256];
-    float gammaFactor = 0.4f;
     for (int index = 0; index < 256; index++)
     {
         float f = (index + 0.5f) / 255;

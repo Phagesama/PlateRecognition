@@ -64,7 +64,7 @@ public:
     static cv::Rect GetSafeRect(cv::Rect rect, cv::Mat plateMat);
     static cv::Mat IndexTransform(cv::Mat originalMap);
     static cv::Mat LogTransform(cv::Mat originalMap);
-    static cv::Mat GammaTransform(cv::Mat originalMap);
+    static cv::Mat GammaTransform(cv::Mat originalMap, float gammaFactor = 0.4f);
 
 private:
 

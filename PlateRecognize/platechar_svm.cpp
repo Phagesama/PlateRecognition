@@ -59,7 +59,7 @@ void PlateChar_SVM::Load(QString fileName)
 bool PlateChar_SVM::isCorrectTrainningDirectory(QString path)
 {
     bool isCorrect = true;
-    for (int i = 0;i < PlateCharString->length();i++) {
+    for (int i = 0;i < PlateCharString.size();i++) {
         QString plateChar = PlateCharString[i];
         QString charDirectory = path + "/" + plateChar;
         isCorrect = QDir(charDirectory).exists();
@@ -127,7 +127,7 @@ bool PlateChar_SVM::PrepareCharTrainningDirectory(QString path)
         {
             dir.mkpath(charsDirectory);
         }
-        for (int i = 0;i < PlateCharString->length(); i++) {
+        for (int i = 0;i < PlateCharString.size(); i++) {
             QString plateChar = PlateCharString[i];
             QString plateCharDirectory = charsDirectory + QString("/") + plateChar;
             if(QDir(plateCharDirectory).exists() == false)
