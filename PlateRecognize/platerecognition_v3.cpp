@@ -69,7 +69,7 @@ bool PlateRecognition_V3::JudgePlateRightful(PlateInfo plateInfo)
     if(plateInfo.charInfos.isEmpty() || plateInfo.charInfos.count()==0) return false;
 
     // 车牌的颜色未知
-    if(plateInfo.plateColor == PlateColor::未知颜色) return false;
+    if(plateInfo.plateColor == PlateColor::未知) return false;
 
     int charCount = 0;
     CharInfo ci;
